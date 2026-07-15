@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLARO 活用アンケート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     送信先設定：GASのウェブアプリURLをここに貼るだけで動きます。
+     空のままでも回答内容はJSONでダウンロードできます。
+     （GAS側 doPost(e) → JSON.parse(e.postData.contents) で受け取り）
+     ========================================================= */
+
+  :root{
+    --bg:#F5F7FA;
+    --surface:#FFFFFF;
+    --ink:#1C2530;
+    --muted:#66717F;
+    --line:#E5E9EF;
+    --line-strong:#D3DAE3;
+    --primary:#2373E6;
+    --primary-deep:#1857B8;
+    --primary-soft:#EAF2FD;
+    --required:#E63757;
+    --hp-ink:#9A6C1E;
+    --hp-bg:#FBF2DD;
+    --hp-line:#EBD9AE;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(28,37,48,.05), 0 8px 24px rgba(28,37,48,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans JP",system-ui,sans-serif;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px 96px;}
+
+  /* ---- header ---- */
+  header{padding:56px 0 28px;}
+  .eyebrow{
+    font-size:12px;letter-spacing:.22em;font-weight:700;
+    color:var(--primary);text-transform:uppercase;margin:0 0 14px;
+  }
+  h1{
+    font-family:"Noto Sans JP",sans-serif;font-weight:700;
+    font-size:30px;line-height:1.4;margin:0 0 16px;letter-spacing:.01em;
+  }
+  .lead{color:var(--muted);font-size:15px;margin:0 0 22px;max-width:60ch;}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    font-size:13px;color:var(--muted);
+  }
+  .meta .chip{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;font-weight:500;color:var(--ink);
+  }
+
+  /* ---- respondent block ---- */
+  .respondent{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:26px 26px 28px;margin-top:8px;
+  }
+  .respondent .field + .field{margin-top:18px;}
+
+  /* ---- theme section ---- */
+  .theme{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:8px 26px 30px;margin-top:26px;
+  }
+  .theme-head{
+    display:flex;align-items:center;gap:16px;
+    padding:24px 0 20px;border-bottom:1px solid var(--line);
+    margin-bottom:24px;
+  }
+  .badge{
+    flex:none;width:46px;height:46px;border-radius:12px;
+    background:var(--primary-soft);color:var(--primary-deep);
+    font-family:"Noto Sans JP",sans-serif;font-weight:700;font-size:22px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .theme-title{margin:0;font-family:"Noto Sans JP",sans-serif;font-weight:600;font-size:19px;line-height:1.4;}
+  .theme-time{margin:3px 0 0;font-size:12.5px;color:var(--muted);}
+  .hp-flag{
+    display:inline-block;margin-left:8px;vertical-align:middle;
+    font-size:11px;font-weight:700;letter-spacing:.04em;
+    color:var(--hp-ink);background:var(--hp-bg);border:1px solid var(--hp-line);
+    border-radius:999px;padding:2px 9px;line-height:1.6;
+  }
+
+  /* ---- question ---- */
+  .q{padding:22px 0;border-top:1px solid var(--line);}
+  .q:first-of-type{border-top:none;padding-top:2px;}
+  .q-no{
+    font-size:12px;font-weight:700;letter-spacing:.08em;
+    color:var(--primary);margin:0 0 6px;
+  }
+  .q-title{font-weight:700;font-size:15.5px;margin:0 0 4px;}
+  .q-note{font-size:13.5px;color:var(--muted);margin:0 0 14px;}
+  .q-note.tight{margin-bottom:12px;}
+
+  .req{color:var(--required);font-weight:700;margin-left:3px;}
+  .hint-inline{font-size:12.5px;color:var(--muted);font-weight:500;margin-left:6px;}
+
+  /* ---- inputs ---- */
+  label.lbl{display:block;font-weight:700;font-size:14.5px;margin:0 0 8px;}
+  input[type=text],textarea{
+    width:100%;border:1px solid var(--line-strong);border-radius:10px;
+    background:#FCFDFB;padding:12px 14px;font:inherit;color:var(--ink);
+    transition:border-color .15s, box-shadow .15s;
+  }
+  textarea{resize:vertical;min-height:88px;line-height:1.7;}
+  input[type=text]:focus,textarea:focus{
+    outline:none;border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(35,115,230,.16);
+  }
+  input.err,textarea.err{border-color:var(--required);box-shadow:0 0 0 3px rgba(230,55,87,.14);}
+
+  .choices{display:flex;flex-direction:column;gap:9px;margin:0 0 14px;}
+  .opt{
+    display:flex;align-items:flex-start;gap:11px;
+    border:1px solid var(--line-strong);border-radius:10px;
+    padding:11px 14px;cursor:pointer;background:#FCFDFB;
+    transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--primary);background:var(--primary-soft);}
+  .opt input{margin:4px 0 0;accent-color:var(--primary);flex:none;width:16px;height:16px;cursor:pointer;}
+  .opt span{font-size:14.5px;}
+  .opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft);}
+  .opt-other .opt{margin-bottom:0;}
+  .otherbox{margin:8px 0 0 27px;width:calc(100% - 27px);}
+  .otherbox:disabled{background:#F1F3F7;color:var(--muted);cursor:not-allowed;opacity:.7;}
+  .followup{margin-top:6px;}
+  .followup label{display:block;font-size:13.5px;color:var(--muted);font-weight:500;margin:0 0 7px;}
+
+  /* ---- submit ---- */
+  .actions{margin-top:34px;text-align:center;}
+  .submit{
+    appearance:none;border:none;cursor:pointer;
+    background:var(--primary);color:#fff;font:inherit;font-weight:700;font-size:16px;
+    padding:15px 44px;border-radius:12px;letter-spacing:.02em;
+    box-shadow:0 6px 18px rgba(35,115,230,.26);
+    transition:background .15s, transform .05s;
+  }
+  .submit:hover{background:var(--primary-deep);}
+  .submit:active{transform:translateY(1px);}
+  .form-note{font-size:12.5px;color:var(--muted);margin:14px 0 0;}
+  .err-summary{
+    display:none;margin-top:16px;color:var(--required);font-size:14px;font-weight:500;
+    background:#FDECEF;border:1px solid #F5CCD5;border-radius:10px;padding:12px 14px;text-align:left;
+  }
+  .err-summary.show{display:block;}
+
+  /* ---- success ---- */
+  .done{display:none;text-align:center;padding:80px 20px;}
+  .done.show{display:block;}
+  .done .mark{
+    width:64px;height:64px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-deep);display:flex;align-items:center;justify-content:center;
+    margin:0 auto 22px;font-size:30px;
+  }
+  .done h2{font-family:"Noto Sans JP",sans-serif;font-size:23px;margin:0 0 12px;}
+  .done p{color:var(--muted);margin:0 auto 8px;max-width:44ch;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:36px 0 0;}
+
+  @media (max-width:560px){
+    header{padding:40px 0 20px;}
+    h1{font-size:24px;}
+    .theme,.respondent{padding-left:18px;padding-right:18px;}
+    .badge{width:40px;height:40px;font-size:19px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="formView">
+    <header>
+      <p class="eyebrow">FLARO USER VOICE</p>
+      <h1>FLARO 活用アンケート</h1>
+      <p class="lead">日々の店舗運営や数字の使い方について、率直なお声をお聞かせください。導入事例やサービス改善の参考にさせていただきます。</p>
+      <div class="meta">
+        <span class="chip">全4テーマ</span>
+        <span>所要時間の目安：合計12〜15分</span>
+      </div>
+    </header>
+
+    <!-- 回答者情報（必須） -->
+    <section class="respondent" aria-label="回答者情報">
+      <div class="field">
+        <label class="lbl" for="company">会社名<span class="req">必須</span></label>
+        <input type="text" id="company" name="company" placeholder="例：株式会社FLARO" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label class="lbl" for="name">氏名<span class="req">必須</span></label>
+        <input type="text" id="name" name="name" placeholder="例：山田 太郎" autocomplete="name">
+      </div>
+    </section>
+
+    <!-- テーマA -->
+    <section class="theme">
+      <div class="theme-head">
+        <div class="badge">A</div>
+        <div>
+          <h2 class="theme-title">導入・定着のリアル</h2>
+          <p class="theme-time">回答目安 3〜5分</p>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">A-1</p>
+        <p class="q-title">導入の決め手</p>
+        <p class="q-note">FLARO導入前は、主にどのような方法で管理されていましたか。<span class="hint-inline">複数選択可</span></p>
+        <div class="choices" data-multi>
+          <label class="opt"><input type="checkbox" name="a1_before" value="Excel・スプレッドシートでの手作業管理"><span>A. Excel・スプレッドシートでの手作業管理</span></label>
+          <label class="opt"><input type="checkbox" name="a1_before" value="他の管理システムを利用"><span>B. 他の管理システムを利用</span></label>
+          <label class="opt"><input type="checkbox" name="a1_before" value="紙・手書きが中心"><span>C. 紙・手書きが中心</span></label>
+          <label class="opt"><input type="checkbox" name="a1_before" value="特に決まった仕組みはなかった"><span>D. 特に決まった仕組みはなかった</span></label>
+        </div>
+        <div class="followup">
+          <label for="a1_reason">FLAROを選んだ決め手や、比較検討時に「ここが違う」と感じたポイントを教えてください。</label>
+          <textarea id="a1_reason" name="a1_reason"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">A-2</p>
+        <p class="q-title">導入前後の変化<span class="hp-flag">HP掲載候補</span></p>
+        <p class="q-note">締め作業や本部確認にかかる時間は、導入前後でどのくらい変わりましたか。体感で構いません。</p>
+        <div class="choices">
+          <label class="opt"><input type="radio" name="a2_change" value="半分以下になった"><span>A. 半分以下になった</span></label>
+          <label class="opt"><input type="radio" name="a2_change" value="3〜4割ほど短縮"><span>B. 3〜4割ほど短縮</span></label>
+          <label class="opt"><input type="radio" name="a2_change" value="1〜2割ほど短縮"><span>C. 1〜2割ほど短縮</span></label>
+          <label class="opt"><input type="radio" name="a2_change" value="ほとんど変わらない"><span>D. ほとんど変わらない</span></label>
+        </div>
+        <div class="followup">
+          <label for="a2_episode">差し支えなければ「以前は◯時間かかっていたが今は◯分」など、具体的なエピソードも添えていただけると嬉しいです。</label>
+          <textarea id="a2_episode" name="a2_episode"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">A-3</p>
+        <p class="q-title">現場への浸透</p>
+        <p class="q-note">店長・スタッフへの浸透で苦労された点と、逆にスムーズに定着したコツを教えてください。（例：入力習慣の定着／操作への慣れ／メリットの伝え方 など）</p>
+        <textarea name="a3_spread"></textarea>
+      </div>
+    </section>
+
+    <!-- テーマB -->
+    <section class="theme">
+      <div class="theme-head">
+        <div class="badge">B</div>
+        <div>
+          <h2 class="theme-title">数字の使い方・経営判断</h2>
+          <p class="theme-time">回答目安 3〜5分</p>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">B-1</p>
+        <p class="q-title">日々見ている数字・画面</p>
+        <p class="q-note">毎日いちばんよく確認している数字・画面はどれですか。<span class="hint-inline">複数選択可</span></p>
+        <div class="choices" data-multi>
+          <label class="opt"><input type="checkbox" name="b1_screen" value="進捗状況"><span>A. 進捗状況</span></label>
+          <label class="opt"><input type="checkbox" name="b1_screen" value="FLARO分析"><span>B. FLARO分析</span></label>
+          <label class="opt"><input type="checkbox" name="b1_screen" value="レーダーチャート"><span>C. レーダーチャート</span></label>
+          <div class="opt-other">
+            <label class="opt">
+              <input type="checkbox" name="b1_screen" value="その他" data-other="b1_other"><span>D. その他</span>
+            </label>
+            <input type="text" id="b1_other" class="otherbox" placeholder="よく見る画面をご記入ください" disabled>
+          </div>
+        </div>
+        <div class="followup">
+          <label for="b1_why">その画面を重視されている理由も、ひとことで構いませんので教えてください。</label>
+          <textarea id="b1_why" name="b1_why"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">B-2</p>
+        <p class="q-title">予算と実績のズレへの対応</p>
+        <p class="q-note">予算と実績のズレに気づいたとき、具体的にどんなアクションにつなげていますか。（例：シフトの調整／発注の見直し／店長への声かけ など、実際の動きを教えてください）</p>
+        <textarea name="b2_action"></textarea>
+      </div>
+
+      <div class="q">
+        <p class="q-no">B-3</p>
+        <p class="q-title">会議での活用</p>
+        <p class="q-note">店長会議・エリアミーティングで、FLAROの数字をどのように活用されていますか。（例：店舗間の比較／目標との差の共有／原因の掘り下げ など）</p>
+        <textarea name="b3_meeting"></textarea>
+      </div>
+    </section>
+
+    <!-- テーマC -->
+    <section class="theme">
+      <div class="theme-head">
+        <div class="badge">C</div>
+        <div>
+          <h2 class="theme-title">現場運用の工夫</h2>
+          <p class="theme-time">回答目安 3〜5分</p>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">C-1</p>
+        <p class="q-title">締め作業の役割分担</p>
+        <p class="q-note">シフト作成・日報の締め作業は、店舗内でどのように役割分担していますか。</p>
+        <div class="choices">
+          <label class="opt"><input type="radio" name="c1_role" value="店長がまとめて担当"><span>A. 店長がまとめて担当</span></label>
+          <label class="opt"><input type="radio" name="c1_role" value="店長と社員・アルバイトで分担"><span>B. 店長と社員・アルバイトで分担</span></label>
+          <label class="opt"><input type="radio" name="c1_role" value="曜日・担当ごとにローテーション"><span>C. 曜日・担当ごとにローテーション</span></label>
+          <div class="opt-other">
+            <label class="opt">
+              <input type="radio" name="c1_role" value="その他" data-other="c1_other"><span>D. その他</span>
+            </label>
+            <input type="text" id="c1_other" class="otherbox" placeholder="分担の仕方をご記入ください" disabled>
+          </div>
+        </div>
+        <div class="followup">
+          <label for="c1_extra">工夫されている点があれば、あわせて教えてください。</label>
+          <textarea id="c1_extra" name="c1_extra"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">C-2</p>
+        <p class="q-title">ボイド・異常値のチェック</p>
+        <p class="q-note">ボイドや異常値のチェックについて、本部ではどのくらいの頻度・基準で確認されていますか。（例：毎日／週次、いくら以上を確認対象にするか など、運用ルールがあれば教えてください）</p>
+        <textarea name="c2_check"></textarea>
+      </div>
+
+      <div class="q">
+        <p class="q-no">C-3</p>
+        <p class="q-title">ヘルプ勤務の人件費按分</p>
+        <p class="q-note">ヘルプ勤務（他店舗応援）が多い店舗では、人件費の按分をどう工夫されていますか。（該当がない場合は「該当なし」で構いません）</p>
+        <textarea name="c3_help"></textarea>
+      </div>
+    </section>
+
+    <!-- テーマD -->
+    <section class="theme">
+      <div class="theme-head">
+        <div class="badge">D</div>
+        <div>
+          <h2 class="theme-title">業界の悩み・共感ポイント<span class="hp-flag">全問 HP掲載候補</span></h2>
+          <p class="theme-time">回答目安 3〜5分</p>
+        </div>
+      </div>
+
+      <div class="q">
+        <p class="q-no">D-1</p>
+        <p class="q-title">人手不足への対応</p>
+        <p class="q-note">離職率の高さや人手不足という業界共通の課題の中で、FLAROがどのように役立っていると感じますか。（例：シフト管理の負担軽減／早期の兆候把握 など、率直なご実感をお聞かせください）</p>
+        <textarea name="d1_labor"></textarea>
+      </div>
+
+      <div class="q">
+        <p class="q-no">D-2</p>
+        <p class="q-title">「防衛ライン」としての数字</p>
+        <p class="q-note">原価・人件費が高騰する中で、FLAROの数字をどのように「守りのライン」として使っていますか。（例：損益分岐の把握／人件費率の上限管理 など）</p>
+        <textarea name="d2_defense"></textarea>
+      </div>
+
+      <div class="q">
+        <p class="q-no">D-3</p>
+        <p class="q-title">複数業態・複数ブランドでの標準化</p>
+        <p class="q-note">複数業態・複数ブランドを運営される中で、FLARO活用の標準化をどう図っていますか。（例：共通指標の設定／店舗間の運用ルール統一 など）</p>
+        <textarea name="d3_standard"></textarea>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="submit" id="submitBtn">回答を送信する</button>
+      <div class="err-summary" id="errSummary">会社名・氏名は必須項目です。ご入力のうえ、もう一度お試しください。</div>
+      <p class="form-note">回答目安：合計12〜15分／必須は会社名・氏名のみです。</p>
+    </div>
+  </div>
+
+  <!-- 完了画面 -->
+  <div class="done" id="doneView">
+    <div class="mark">✓</div>
+    <h2>ご回答ありがとうございました</h2>
+    <p>いただいたお声は、サービス改善と導入事例づくりに活用させていただきます。</p>
+    <p id="dlLine" style="margin-top:18px;"></p>
+  </div>
+
+  <footer>FLARO 活用アンケート</footer>
+</div>
+
+<script>
+  // ▼▼▼ ここにGASウェブアプリのURLを貼ると自動でスプレッドシートに記録されます ▼▼▼
+  const GAS_ENDPOINT = "";
+  // ▲▲▲ 空のままなら送信時に回答をJSONでダウンロードできます ▲▲▲
+
+  // 「その他」テキストの有効/無効を選択に連動
+  document.querySelectorAll('input[data-other]').forEach(function(ctrl){
+    const box = document.getElementById(ctrl.dataset.other);
+    const sync = function(){
+      if (ctrl.type === 'radio'){
+        // 同じグループの他ボックスは無効化＆クリア
+        document.querySelectorAll('input[name="'+ctrl.name+'"][data-other]').forEach(function(r){
+          const b = document.getElementById(r.dataset.other);
+          if (b && !r.checked){ b.value=''; b.disabled=true; }
+        });
+      }
+      box.disabled = !ctrl.checked;
+      if (ctrl.checked){ box.focus(); } else { box.value=''; }
+    };
+    ctrl.addEventListener('change', sync);
+  });
+
+  function collect(){
+    const data = { submittedAt: new Date().toISOString() };
+    // テキスト系
+    ['company','name','a1_reason','a2_episode','a3_spread','b1_why','b2_action',
+     'b3_meeting','c1_extra','c2_check','c3_help','d1_labor','d2_defense','d3_standard']
+      .forEach(function(n){
+        const el = document.querySelector('[name="'+n+'"]');
+        data[n] = el ? el.value.trim() : '';
+      });
+    // 単一選択
+    ['a2_change','c1_role'].forEach(function(n){
+      const sel = document.querySelector('input[name="'+n+'"]:checked');
+      data[n] = sel ? sel.value : '';
+    });
+    // 複数選択
+    ['a1_before','b1_screen'].forEach(function(n){
+      data[n] = Array.from(document.querySelectorAll('input[name="'+n+'"]:checked'))
+        .map(function(el){ return el.value; }).join(' / ');
+    });
+    // その他自由記入
+    const b1o = document.getElementById('b1_other').value.trim();
+    const c1o = document.getElementById('c1_other').value.trim();
+    if (b1o) data.b1_screen = (data.b1_screen ? data.b1_screen + '（その他：'+b1o+'）' : 'その他：'+b1o);
+    if (c1o && data.c1_role === 'その他') data.c1_role = 'その他：'+c1o;
+    return data;
+  }
+
+  function validate(){
+    let ok = true;
+    ['company','name'].forEach(function(n){
+      const el = document.querySelector('[name="'+n+'"]');
+      if (!el.value.trim()){ el.classList.add('err'); ok = false; }
+      else { el.classList.remove('err'); }
+    });
+    return ok;
+  }
+
+  document.querySelectorAll('#company, #name').forEach(function(el){
+    el.addEventListener('input', function(){ el.classList.remove('err'); });
+  });
+
+  function downloadJSON(data){
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safe = (data.company || 'response').replace(/[\\/:*?"<>|]/g,'_');
+    a.href = url; a.download = 'FLAROアンケート_'+safe+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function showDone(withDownload){
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('doneView').classList.add('show');
+    if (withDownload){
+      document.getElementById('dlLine').textContent =
+        '（送信先が未設定のため、回答内容をファイルとして保存しました）';
+    }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', async function(){
+    const summary = document.getElementById('errSummary');
+    if (!validate()){
+      summary.classList.add('show');
+      document.querySelector('#company').scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    summary.classList.remove('show');
+
+    const data = collect();
+    const btn = this;
+    btn.disabled = true; btn.textContent = '送信中…';
+
+    if (!GAS_ENDPOINT){
+      downloadJSON(data);
+      showDone(true);
+      return;
+    }
+    try {
+      // GAS向け：Content-Typeを付けず text/plain 扱いにしてプリフライトを回避
+      await fetch(GAS_ENDPOINT, { method:'POST', body: JSON.stringify(data) });
+      showDone(false);
+    } catch (e){
+      downloadJSON(data);
+      showDone(true);
+    }
+  });
+</script>
+</body>
+</html>
