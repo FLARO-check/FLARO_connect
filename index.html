@@ -378,6 +378,20 @@
       </div>
     </section>
 
+    <!-- 最後に：自由記載 -->
+    <section class="theme">
+      <div class="theme-head">
+        <div class="badge">＋</div>
+        <div>
+          <h2 class="theme-title">最後に｜FLAROへのご要望・ご相談・ご質問</h2>
+        </div>
+      </div>
+      <div class="q" style="border-top:none;padding-top:2px;">
+        <p class="q-note">FLAROへのご要望、ご相談、ご質問など、ございましたら自由にご記入ください。<span class="hint-inline">任意</span></p>
+        <textarea name="free_comment" placeholder="ご自由にお書きください"></textarea>
+      </div>
+    </section>
+
     <div class="actions">
       <button type="button" class="submit" id="submitBtn">回答を送信する</button>
       <div class="err-summary" id="errSummary">会社名・氏名は必須項目です。ご入力のうえ、もう一度お試しください。</div>
@@ -422,7 +436,7 @@
     const data = { submittedAt: new Date().toISOString() };
     // テキスト系
     ['company','name','a1_reason','a2_episode','a3_spread','b1_why','b2_action',
-     'b3_meeting','c1_extra','c2_check','c3_help','d1_labor','d2_defense','d3_standard']
+     'b3_meeting','c1_extra','c2_check','c3_help','d1_labor','d2_defense','d3_standard','free_comment']
       .forEach(function(n){
         const el = document.querySelector('[name="'+n+'"]');
         data[n] = el ? el.value.trim() : '';
