@@ -136,8 +136,8 @@
   .opt input{margin:4px 0 0;accent-color:var(--primary);flex:none;width:16px;height:16px;cursor:pointer;}
   .opt span{font-size:14.5px;}
   .opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft);}
-  .opt-other .opt{margin-bottom:0;}
-  .otherbox{margin:8px 0 0 27px;width:calc(100% - 27px);}
+  .opt-other{display:flex;flex-direction:column;gap:9px;}
+  .otherbox{width:100%;margin:0;}
   .otherbox:disabled{background:#F1F3F7;color:var(--muted);cursor:not-allowed;opacity:.7;}
   .followup{margin-top:6px;}
   .followup label{display:block;font-size:13.5px;color:var(--muted);font-weight:500;margin:0 0 7px;}
